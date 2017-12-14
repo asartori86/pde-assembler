@@ -2,7 +2,7 @@
 # D2K_GIT_BRANCH=       master
 # D2K_GIT_SHORTREV=     a0a7c70
 # DEAL_II_GIT_BRANCH=   master
-# DEAL_II_GIT_SHORTREV= ec3ec701f2
+# DEAL_II_GIT_SHORTREV= 62aba133de
 subsection Dirichlet boundary conditions
   set IDs and component masks = 0=ALL
   set IDs and expressions     = 
@@ -55,6 +55,24 @@ subsection Forcing terms
   set IDs and expressions     = 1=(t<10?1e-2:0);0;0
   set Known component names   = u,u,u
   set Used constants          = 
+end
+subsection IDA Solver Parameters
+  set Absolute error tolerance                      = 1e-4
+  set Final time                                    = 20
+  set Ignore algebraic terms for error computations = false
+  set Initial condition Newton max iterations       = 5
+  set Initial condition Newton parameter            = 0.33
+  set Initial condition type                        = use_y_diff
+  set Initial condition type after restart          = use_y_dot
+  set Initial step size                             = 1e-4
+  set Initial time                                  = 0
+  set Maximum number of nonlinear iterations        = 10
+  set Maximum order of BDF                          = 5
+  set Min step size                                 = 5e-5
+  set Relative error tolerance                      = 1e-3
+  set Seconds between each output                   = 1e-1
+  set Show output of time steps                     = true
+  set Use local tolerances                          = false
 end
 subsection Initial solution
   set Function constants  = 
@@ -138,14 +156,8 @@ subsection pidomus
   set Max iterations finer prec.                     = 0
   set Max tmp vectors                                = 30
   set Max tmp vectors for finer system               = 50
-  set Number of cycles                               = 1
-  set Number of eigenvalues to compute               = 10
-  set Number of used Arnoldi vectors                 = 0
-  set Overwrite Newton's iterations                  = true
+  set Overwrite Newton's iterations                  = false
   set Print some useful informations about processes = true
   set Refine mesh during transient                   = false
   set Threshold for solver's restart                 = 1e-2
-  set Time stepper                                   = imex
-  set Use direct solver if available                 = true
-  set Which eigenvalues                              = smallest_real_part
 end
