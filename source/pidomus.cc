@@ -209,6 +209,7 @@ void piDoMUS<dim,spacedim,LAC>::init()
   setup_dofs(true);
   train_constraints[0]->distribute(solution);
   constraints_dot.distribute(solution_dot);
+  current_cycle = 0;
 }
 
 template <int dim, int spacedim, typename LAC>
