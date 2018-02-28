@@ -43,9 +43,9 @@ template <int dim, int spacedim, typename LAC>
 StreamerModel<dim,spacedim, LAC>::
 StreamerModel():
   PDESystemInterface<dim,spacedim,StreamerModel<dim,spacedim,LAC>, LAC >("Streamer model",
-      3,1,
-      "FESystem[FE_Q(1)^3]",
-      "u,u,u","1")
+      6,1,
+      "FESystem[FE_Q(1)^3-FE_Q(1)^3]",
+      "u,u,u,v,v,v","1,1")
 {}
 
 
@@ -72,9 +72,9 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
   auto &graduts = fe_cache.get_gradients("solution_dot", "du", displ, rt);
   auto &gradus = fe_cache.get_gradients("solution", "du", displ, rt);
 
-  // auto &gradvs = fe_cache.get_gradients("solution", "dv", vel, rt);
-  // auto &vs     = fe_cache.get_values("solution", "v", vel, rt);
-  // auto &vts    = fe_cache.get_values("solution_dot", "v_dot", vel, rt);
+  auto &gradvs = fe_cache.get_gradients("solution", "dv", vel, rt);
+  auto &vs     = fe_cache.get_values("solution", "v", vel, rt);
+  auto &vts    = fe_cache.get_values("solution_dot", "v_dot", vel, rt);
   
   // auto &us = fe_cache.get_values("solution", "u", displ, rt);
   // auto &us_2 = fe_cache.get_values("previous_explicit_solution", "u", displ, alpha);
@@ -93,25 +93,25 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
   for (unsigned int q=0; q<n_q_points; ++q)
     {
       auto &ut = uts[q];
-      // auto &v = vs[q];
-      // auto &vt = vts[q];
+      auto &v = vs[q];
+      auto &vt = vts[q];
       auto &gradu = gradus[q];
-      // auto &gradv = gradvs[q];
+      auto &gradv = gradvs[q];
       for (unsigned int i=0; i<local_residuals[0].size(); ++i)
         {
 	  // const double k = 1.;
           auto phi_u = fev[displ].value(i,q);
           auto grad_phi_u = fev[displ].gradient(i,q);
-          // auto phi_v = fev[vel].value(i,q);
-          // auto grad_phi_v = fev[vel].gradient(i,q);
+          auto phi_v = fev[vel].value(i,q);
+          auto grad_phi_v = fev[vel].gradient(i,q);
           local_residuals[0][i] += (
-				    // rho*vt*phi_u +
-				    // 1e5*(v-ut)*phi_v + 
+				    rho*vt*phi_u +
+				    1e5*(v-ut)*phi_v + 
 				    // (u*phi_u)*alpha*alpha*rho -rho*2.*alpha*alpha*(u_1*phi_u) + (u_2*phi_u)*alpha*alpha*rho
 				    // +
 				    k*scalar_product(gradu,grad_phi_u)
 
-				    + eta*scalar_product(graduts[q],grad_phi_u)
+				    + eta*scalar_product(gradv,grad_phi_u)
 				    
 				    +ut*phi_u
 
