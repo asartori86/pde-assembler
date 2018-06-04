@@ -30,7 +30,8 @@ subsection Domain
 end
 subsection Forcing terms
   set IDs and component masks = 1=0;6
-  set IDs and expressions     = 1=(t<100?1e-2*(t/100.):\
+  set IDs and expressions     = 1=\
+      (t<100?1e-2*(t/100.):\
       (t<300?1e-2: \
       (t<600? 1.35e-2: \
       (t<900? 1.7e-2:\
@@ -62,7 +63,7 @@ subsection IDA Solver Parameters
   set Maximum order of BDF                          = 5
   set Min step size                                 = 5e-5
   set Relative error tolerance                      = 1e-4
-  set Seconds between each output                   = 1
+  set Seconds between each output                   = 0.5
   set Show output of time steps                     = true
   set Use local tolerances                          = false
 end
@@ -123,7 +124,7 @@ subsection Streamer model
   set Finite element space             = FESystem[FE_Q(1)^3-FE_Q(1)^3-FE_Q(1)^3]
   set elasticity constant              = 3e-4
   set rho linear                       = 1e-8
-  set viscosity                        = 1
+  set viscosity                        = 3
 end
 subsection pidomus
   set Adaptive refinement                            = false

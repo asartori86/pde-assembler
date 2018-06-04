@@ -56,9 +56,9 @@ template <int dim, int spacedim, typename LAC>
 StreamerModel<dim,spacedim, LAC>::
 StreamerModel():
   PDESystemInterface<dim,spacedim,StreamerModel<dim,spacedim,LAC>, LAC >("Streamer model",
-      9,1,
-      "FESystem[FE_Q(1)^3-FE_Q(1)^3-FE_Q(1)^3]",
-      "u,u,u,v,v,v,ue,ue,ue","1,1,1")
+      12,1,
+      "FESystem[FE_Q(1)^3-FE_Q(1)^3-FE_Q(1)^3-FE_Q(1)^3]",
+      "u,u,u,v,v,v,ue,ue,ue,ve,ve,ve","1,1,1,1")
 {}
 
 
@@ -77,11 +77,13 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
   const FEValuesExtractors::Vector displ(0);
   const FEValuesExtractors::Vector vel(spacedim);
   const FEValuesExtractors::Vector uel(spacedim+spacedim);
+  const FEValuesExtractors::Vector vel_el(spacedim+spacedim+spacedim);
   static const double L = 1e-3;
   ResidualType rt = 0; // dummy number to define the type of variables
   this->reinit (rt, cell, fe_cache);
   const double alpha = this->get_alpha();
   fe_cache.cache_local_solution_vector("explicit_solution_dot", this->get_locally_relevant_previous_explicit_solution(),alpha);
+  fe_cache.cache_local_solution_vector("solution", this->get_locally_relevant_solution(),alpha);
   auto &uts = fe_cache.get_values("solution_dot", "u", displ, rt);
   auto &graduts = fe_cache.get_gradients("solution_dot", "du", displ, rt);
   auto &gradus = fe_cache.get_gradients("solution", "du", displ, rt);
@@ -93,6 +95,11 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
   auto &gradues = fe_cache.get_gradients("solution", "due", uel, rt);
   auto &graduets    = fe_cache.get_gradients("solution_dot", "due_dot", uel, rt);
   auto &uets = fe_cache.get_values("explicit_solution_dot", "uet", uel, alpha);
+
+  auto &ves     = fe_cache.get_values("solution", "ve", vel_el, rt);
+  auto &vets     = fe_cache.get_values("solution_dot", "ve_dot", vel_el, rt);
+  auto &gradves = fe_cache.get_gradients("solution", "dve", vel_el, alpha);
+
 
   // auto &us = fe_cache.get_values("solution", "u", displ, rt);
   // auto &us_2 = fe_cache.get_values("previous_explicit_solution", "u", displ, alpha);
@@ -117,8 +124,11 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
       auto &gradv = gradvs[q];
 
       auto &uet = uets[q];
+      auto &vet = vets[q];
+      auto &ve  = ves[q];
       auto &gradue = gradues[q];
       auto &graduet = graduets[q];
+      auto &gradve = gradves[q];
       
       for (unsigned int i=0; i<local_residuals[0].size(); ++i)
         {
@@ -128,20 +138,31 @@ energies_and_residuals(const typename DoFHandler<dim,spacedim>::active_cell_iter
           auto grad_phi_u = fev[displ].gradient(i,q);
 	  auto grad_phi_ue = fev[uel].gradient(i,q);
           auto phi_v = fev[vel].value(i,q);
-          auto grad_phi_v = fev[vel].gradient(i,q);
+          // auto grad_phi_v = fev[vel].gradient(i,q);
+	  auto phi_ve = fev[vel_el].value(i,q);
           local_residuals[0][i] += (
-				    k*scalar_product(gradue,grad_phi_ue) +
-				    
-				    // uet*phi_ue +
-				    
-				    rho*vt*phi_u +
-				    1e5*(v-ut)*phi_v + 
+				    k*scalar_product(gradue,grad_phi_ue) 
+				    +rho*phi_ue*vet
+				    +rho*phi_ue*k/eta*ve
+				    // +rho*phi_ue*ve*1e8
 
-				    eta*scalar_product(gradv,grad_phi_u)
-
-				    - eta*scalar_product(graduet,grad_phi_u)
+				    +(ve-uet)*phi_ve // vincolo ve = ue_dot
 				    
-				    +ut*phi_u
+				    // -100.*uet*phi_ue 
+				    
+				    // +rho*vt*phi_u
+
+				    +rho*phi_u*vet
+				    +rho*phi_u*k/eta*ve
+				    // +rho*phi_u*ve*1e8
+
+				    +(v-ut)*phi_v  
+
+				    +eta*scalar_product(gradv,grad_phi_u)
+
+				    - eta*scalar_product(gradve,grad_phi_u)
+				    
+				    // +ut*phi_u
 
 				    )*JxW[q];
         }
